@@ -10,8 +10,8 @@ import {BehaviorSubject} from 'rxjs'
 
 export default function App() {
   console.log('<App/>')
-  const [countA, setCountA] = useSignal(0)
-  const [countB, setCountB] = useSignal(0)
+  const signalA = createSignal(0)
+  const signalB = createSignal(0)
 
   return (
     <div className="App">
@@ -33,7 +33,7 @@ function Display({count, name}) {
 
 // =======================================================================
 
-function useSignal<T>(value: T) {
+function _useSignal<T>(value: T) {
   const snapshot = useRef<T>(value)
   const signal = useRef<BehaviorSubject<T>>()
   signal.current = useMemo(() => new BehaviorSubject(value), [])
@@ -66,6 +66,24 @@ function useSignalValue<T>(signal: BehaviorSubject<T>, snapshot: T) {
 
     return () => {
       s.unsubscribe()
+    }
+  }, [signal])
+
+  return state
+}
+
+function createSignal<T>(value: T) {
+  return new BehaviorSubject(value)
+}
+
+function useSignal<T>(signal: BehaviorSubject<T>): T {
+  const [state, setState] = useState(signal.getValue())
+
+  useEffect(() => {
+    const sub = signal.subscribe(setState)
+
+    return () => {
+      sub.unsubscribe()
     }
   }, [signal])
 
